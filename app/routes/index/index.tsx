@@ -1,0 +1,93 @@
+import type { Goal } from "@prisma/client";
+import {
+  type LoaderFunction,
+  redirect,
+  json,
+  type ActionFunction,
+} from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import { withZod } from "@remix-validated-form/with-zod";
+import { validationError } from "remix-validated-form";
+import { z } from "zod";
+
+import { getYear } from "~/dates";
+import {
+  archiveGoal,
+  createYearlyGoal,
+  getGoalsReport,
+} from "~/models/goals.server";
+import { getUserId } from "~/session.server";
+import Strip from "./Strip";
+
+export let loader: LoaderFunction = async ({ request }) => {
+  let userId = await getUserId(request);
+  if (!userId) {
+    return redirect("/login");
+  }
+
+  let date = new Date();
+
+  let goals = await getGoalsReport(userId, date);
+  return json({ goals });
+};
+
+type LoaderData = {
+  goals: {
+    yearlyGoals: Goal[];
+    monthlyGoals: Goal[];
+    weeklyGoals: Goal[];
+    dailyGoals: Goal[];
+  };
+};
+
+export let setGoalValidator = withZod(
+  z.discriminatedUnion("_action", [
+    z.object({
+      _action: z.literal("set_goal"),
+      title: z.string(),
+      scope: z.enum(["year", "month", "week", "day"]),
+    }),
+    z.object({ _action: z.literal("archive"), id: z.string() }),
+    z.object({ _action: z.literal("mark_done"), id: z.string() }),
+  ])
+);
+export let action: ActionFunction = async ({ request }) => {
+  console.log("heree");
+  let result = await setGoalValidator.validate(
+    Object.fromEntries(await request.formData())
+  );
+  console.log(result);
+  if (result.error) {
+    return validationError(result.error, result.submittedData);
+  }
+  switch (result.data._action) {
+    case "set_goal": {
+      let userId = await getUserId(request);
+      if (!userId) {
+        throw new Response("Not logged in", {
+          status: 401,
+        });
+      }
+      let date = new Date();
+      await createYearlyGoal({
+        title: result.submittedData.title,
+        userId,
+        year: getYear(date),
+      });
+
+      return redirect("/");
+    }
+    case "archive": {
+      await archiveGoal(result.data.id);
+      return redirect("/");
+    }
+  }
+};
+export default function Index() {
+  let { goals } = useLoaderData() as LoaderData;
+  return (
+    <main className="relative  flex min-h-screen flex-col">
+      <Strip goals={goals.yearlyGoals} scope="year" />
+    </main>
+  );
+}
