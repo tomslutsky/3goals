@@ -9,6 +9,7 @@ import { useLoaderData } from "@remix-run/react";
 import { withZod } from "@remix-validated-form/with-zod";
 import { validationError } from "remix-validated-form";
 import { z } from "zod";
+import Header from "~/components/Header";
 import {
   archiveGoal,
   getGoalsReport,
@@ -27,10 +28,11 @@ export let loader: LoaderFunction = async ({ request }) => {
   let date = new Date();
 
   let goals = await getGoalsReport(userId, date);
-  return json({ goals });
+  return json({ goals, date });
 };
 
 type LoaderData = {
+  date: string;
   goals: {
     yearlyGoals: Goal[];
     monthlyGoals: Goal[];
@@ -87,12 +89,20 @@ export let action: ActionFunction = async ({ request }) => {
   }
 };
 export default function Index() {
-  let { goals } = useLoaderData() as LoaderData;
+  let { goals, date: stringifiedDate } = useLoaderData() as LoaderData;
+  let date = new Date(stringifiedDate);
   return (
     <main className="relative  flex min-h-screen flex-col">
-      <Strip goals={goals.yearlyGoals} scope="year" />
-      <Strip goals={goals.monthlyGoals} scope="month" />
-      <Strip goals={goals.weeklyGoals} scope="week" />
+      <Header />
+      <Strip goals={goals.yearlyGoals} scope="year" date={date} />
+      <Strip goals={goals.monthlyGoals} scope="month" date={date} />
+      <Strip goals={goals.weeklyGoals} scope="week" date={date} />
+      <Strip
+        goals={goals.dailyGoals}
+        scope="day"
+        date={date}
+        className="flex-1 "
+      />
     </main>
   );
 }
