@@ -52,11 +52,9 @@ export let setGoalValidator = withZod(
   ])
 );
 export let action: ActionFunction = async ({ request }) => {
-  console.log("heree");
   let result = await setGoalValidator.validate(
     Object.fromEntries(await request.formData())
   );
-  console.log(result);
   if (result.error) {
     return validationError(result.error, result.submittedData);
   }

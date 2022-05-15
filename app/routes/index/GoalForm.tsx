@@ -1,6 +1,5 @@
 import { useFetcher } from "@remix-run/react";
-import { useField, ValidatedForm } from "remix-validated-form";
-import { setGoalValidator } from ".";
+import { useField } from "remix-validated-form";
 
 type Props = {
   scope: "year" | "month" | "week" | "day";
