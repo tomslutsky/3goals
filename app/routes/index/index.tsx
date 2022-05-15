@@ -9,12 +9,11 @@ import { useLoaderData } from "@remix-run/react";
 import { withZod } from "@remix-validated-form/with-zod";
 import { validationError } from "remix-validated-form";
 import { z } from "zod";
-
-import { getYear } from "~/dates";
 import {
   archiveGoal,
-  createYearlyGoal,
   getGoalsReport,
+  markDone,
+  setGoal,
 } from "~/models/goals.server";
 import { getUserId } from "~/session.server";
 import Strip from "./Strip";
@@ -67,16 +66,22 @@ export let action: ActionFunction = async ({ request }) => {
         });
       }
       let date = new Date();
-      await createYearlyGoal({
-        title: result.submittedData.title,
+
+      await setGoal({
+        scope: result.data.scope,
+        title: result.data.title,
+        date,
         userId,
-        year: getYear(date),
       });
 
       return redirect("/");
     }
     case "archive": {
       await archiveGoal(result.data.id);
+      return redirect("/");
+    }
+    case "mark_done": {
+      await markDone(result.data.id);
       return redirect("/");
     }
   }
@@ -86,6 +91,8 @@ export default function Index() {
   return (
     <main className="relative  flex min-h-screen flex-col">
       <Strip goals={goals.yearlyGoals} scope="year" />
+      <Strip goals={goals.monthlyGoals} scope="month" />
+      <Strip goals={goals.weeklyGoals} scope="week" />
     </main>
   );
 }

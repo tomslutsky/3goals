@@ -64,17 +64,29 @@ export async function getGoalsReport(userId: string, date: Date) {
   };
 }
 
-export async function createYearlyGoal(args: {
+export async function setGoal(args: {
+  scope: "year" | "month" | "week" | "day";
   userId: string;
-  year: number;
+  date: Date;
   title: string;
 }) {
+  let year = getYear(args.date);
+  let month = args.scope !== "year" ? getMonth(args.date) : undefined;
+  let week =
+    args.scope === "week" || args.scope === "day"
+      ? getWeek(args.date)
+      : undefined;
+  let day = args.scope === "day" ? getDay(args.date) : undefined;
   return db.goal.create({
     data: {
       userId: args.userId,
-      scope: "year",
-      year: args.year,
+      scope: args.scope,
+
       title: args.title,
+      year,
+      month,
+      week,
+      day,
     },
   });
 }
@@ -84,6 +96,17 @@ export async function archiveGoal(goalId: string) {
     where: { id: goalId },
     data: {
       status: "archived",
+    },
+  });
+}
+
+export async function markDone(goalId: string) {
+  await db.goal.update({
+    where: {
+      id: goalId,
+    },
+    data: {
+      status: "done",
     },
   });
 }
