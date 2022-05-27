@@ -12,7 +12,10 @@ export async function getGoalsReport(userId: string, date: Date) {
   let goals = await promiseHash({
     yearlyGoals: db.goal.findMany({
       where: {
-        status: "active",
+        status: {
+          in: ["active", "done"],
+        },
+
         userId,
         scope: "year",
         year,
@@ -20,7 +23,9 @@ export async function getGoalsReport(userId: string, date: Date) {
     }),
     monthlyGoals: db.goal.findMany({
       where: {
-        status: "active",
+        status: {
+          in: ["active", "done"],
+        },
 
         userId,
         scope: "month",
@@ -31,7 +36,9 @@ export async function getGoalsReport(userId: string, date: Date) {
     weeklyGoals: db.goal.findMany({
       where: {
         userId,
-        status: "active",
+        status: {
+          in: ["active", "done"],
+        },
 
         scope: "week",
         year,
@@ -42,7 +49,9 @@ export async function getGoalsReport(userId: string, date: Date) {
     dailyGoals: db.goal.findMany({
       where: {
         userId,
-        status: "active",
+        status: {
+          in: ["active", "done"],
+        },
 
         scope: "day",
         year,
@@ -107,6 +116,17 @@ export async function markDone(goalId: string) {
     },
     data: {
       status: "done",
+    },
+  });
+}
+
+export async function marNotkDone(goalId: string) {
+  await db.goal.update({
+    where: {
+      id: goalId,
+    },
+    data: {
+      status: "active",
     },
   });
 }

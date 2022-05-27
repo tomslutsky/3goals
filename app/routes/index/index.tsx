@@ -14,6 +14,7 @@ import {
   archiveGoal,
   getGoalsReport,
   markDone,
+  marNotkDone,
   setGoal,
 } from "~/models/goals.server";
 import { getUserId } from "~/session.server";
@@ -50,12 +51,12 @@ export let setGoalValidator = withZod(
     }),
     z.object({ _action: z.literal("archive"), id: z.string() }),
     z.object({ _action: z.literal("mark_done"), id: z.string() }),
+    z.object({ _action: z.literal("mark_not_done"), id: z.string() }),
   ])
 );
 export let action: ActionFunction = async ({ request }) => {
-  let result = await setGoalValidator.validate(
-    Object.fromEntries(await request.formData())
-  );
+  let result = await setGoalValidator.validate(await request.formData());
+
   if (result.error) {
     return validationError(result.error, result.submittedData);
   }
@@ -84,6 +85,10 @@ export let action: ActionFunction = async ({ request }) => {
     }
     case "mark_done": {
       await markDone(result.data.id);
+      return redirect("/");
+    }
+    case "mark_not_done": {
+      await marNotkDone(result.data.id);
       return redirect("/");
     }
   }
