@@ -130,3 +130,14 @@ export async function marNotkDone(goalId: string) {
     },
   });
 }
+
+export async function updateGoal(args: { id: string; title: string }) {
+  return db.goal.update({
+    where: {
+      id: args.id,
+    },
+    data: {
+      title: args.title,
+    },
+  });
+}
