@@ -139,16 +139,14 @@ let GoalItem = (goal: Goal) => {
           onBlur={(e) => {
             fetcher.submit(e.target.form, { method: "post" });
           }}
-          className={status === "done" ? "line-through opacity-50" : ""}
+          maxLength={80}
+          className={classNames("w-full", {
+            "line-through opacity-50": status === "done",
+          })}
           name="title"
           defaultValue={goal.title}
         />
-        <button
-          type="submit"
-          name="_action"
-          value="update"
-          className="hidden"
-        />
+        <input type="hidden" name="_action" value="update" />
       </fetcher.Form>
       <fetcher.Form method="post">
         <input type="hidden" name="id" value={goal.id} />
