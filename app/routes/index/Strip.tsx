@@ -18,7 +18,7 @@ let Strip = (props: Props) => {
   let { value, onToggle } = useToggle();
 
   let numOfActiveGoals = useMemo(() => {
-    return goals.filter((goal) => goal.status === "done").length;
+    return goals.filter((goal) => goal.status === "active").length;
   }, [goals]);
 
   let formattedDate = formatDateByScope(date, scope);
