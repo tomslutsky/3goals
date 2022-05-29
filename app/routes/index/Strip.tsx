@@ -105,7 +105,14 @@ let GoalItem = (goal: Goal) => {
   }, [fetcher]);
 
   return (
-    <div className="grid w-full grid-cols-[min-content_auto_min-content] items-center gap-3">
+    <div
+      className={classNames(
+        "grid w-full grid-cols-[min-content_auto_min-content] items-center gap-3",
+        {
+          hidden: fetcher.submission?.formData.get("_action") === "archive",
+        }
+      )}
+    >
       <fetcher.Form method="post">
         <input type="hidden" name="id" value={goal.id} />
         <input
@@ -143,7 +150,7 @@ let GoalItem = (goal: Goal) => {
           className="hidden"
         />
       </fetcher.Form>
-      <fetcher.Form>
+      <fetcher.Form method="post">
         <input type="hidden" name="id" value={goal.id} />
         <button name="_action" value="archive">
           <XIcon className="h-5 w-5" />
