@@ -63,10 +63,7 @@ export async function getGoalsReport(userId: string, date: Date) {
   });
 
   return {
-    yearlyGoals: randomizeList(
-      goals.yearlyGoals,
-      Math.ceil(Math.random() * goals.yearlyGoals.length)
-    ),
+    yearlyGoals: randomizeList(goals.yearlyGoals),
     monthlyGoals: randomizeList(goals.monthlyGoals),
     weeklyGoals: randomizeList(goals.weeklyGoals),
     dailyGoals: randomizeList(goals.dailyGoals),
