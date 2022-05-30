@@ -1,21 +1,25 @@
 import type { Goal } from "@prisma/client";
-import { useFetcher } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import GoalForm from "./GoalForm";
 import { formatDateByScope } from "~/dates";
 import { useEffect, useMemo, useRef, type HTMLProps } from "react";
 import classNames from "classnames";
-import { XIcon } from "@heroicons/react/outline";
-import { useToggle } from "~/hooks/useToggle";
-import { Switch } from "@headlessui/react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XIcon,
+} from "@heroicons/react/outline";
+
+import { add, format } from "date-fns";
 
 type Props = HTMLProps<HTMLDivElement> & {
   goals: Goal[];
   scope: "year" | "month" | "week" | "day";
   date: Date;
+  hideCompleted?: boolean;
 };
 let Strip = (props: Props) => {
-  let { goals, scope, date, className, ...rest } = props;
-  let { value, onToggle } = useToggle();
+  let { goals, scope, date, className, hideCompleted, ...rest } = props;
 
   let numOfActiveGoals = useMemo(() => {
     return goals.filter((goal) => goal.status === "active").length;
@@ -24,11 +28,15 @@ let Strip = (props: Props) => {
   let formattedDate = formatDateByScope(date, scope);
 
   let filteredGoals = useMemo(() => {
-    if (value === "active") {
+    if (hideCompleted) {
       return goals.filter((goal) => goal.status !== "done");
     }
     return goals;
-  }, [goals, value]);
+  }, [goals, hideCompleted]);
+
+  let nextDate = add(date, { [`${scope}s`]: 1 });
+  let prevDate = add(date, { [`${scope}s`]: -1 });
+
   return (
     <section
       {...rest}
@@ -38,31 +46,21 @@ let Strip = (props: Props) => {
       )}
     >
       <div className="flex w-full items-center justify-between">
+        <Link to={`/?date=${format(prevDate, "yyyy-MM-dd")}`}>
+          <ChevronLeftIcon className="h-4 w-4" />
+        </Link>
         <h3 className="text-lg font-bold">
           {scope === "week" ? "Week " : ""}
           {formattedDate}
         </h3>
-        <Switch.Group>
-          <div className="flex items-center gap-2">
-            <Switch.Label className="text-sm">Hide completed</Switch.Label>
-
-            <Switch
-              checked={value === "active"}
-              onChange={onToggle}
-              className={`${value === "active" ? "bg-blue-500" : "bg-teal-400"}
-          relative inline-flex h-[16px] w-[24px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2  focus-visible:ring-white focus-visible:ring-opacity-75`}
-            >
-              <span
-                aria-hidden="true"
-                className={`${
-                  value === "active" ? "translate-x-[8px]" : "translate-x-0"
-                }
-            pointer-events-none inline-block h-[12px] w-[12px] transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out`}
-              />
-            </Switch>
-          </div>
-        </Switch.Group>
+        <Link
+          to={`/?date=${format(nextDate, "yyyy-MM-dd")}`}
+          className="h-4 w-4"
+        >
+          <ChevronRightIcon />
+        </Link>
       </div>
+
       <ul className="w-full">
         {filteredGoals.map((goal) => (
           <li key={goal.id} className="w-full">

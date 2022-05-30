@@ -1,3 +1,4 @@
+import { Switch } from "@headlessui/react";
 import type { Goal } from "@prisma/client";
 import {
   type LoaderFunction,
@@ -7,9 +8,11 @@ import {
 } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { withZod } from "@remix-validated-form/with-zod";
+import { parse } from "date-fns";
 import { validationError } from "remix-validated-form";
 import { z } from "zod";
 import Header from "~/components/Header";
+import { useToggle } from "~/hooks/useToggle";
 import {
   archiveGoal,
   getGoalsReport,
@@ -26,8 +29,12 @@ export let loader: LoaderFunction = async ({ request }) => {
   if (!userId) {
     return redirect("/login");
   }
+  let url = new URL(request.url);
+  let desiredDate = url.searchParams.get("date");
 
-  let date = new Date();
+  let date = desiredDate
+    ? parse(desiredDate, "yyyy-MM-dd", new Date())
+    : new Date();
 
   let goals = await getGoalsReport(userId, date);
   return json({ goals, date });
@@ -109,17 +116,56 @@ export let action: ActionFunction = async ({ request }) => {
 export default function Index() {
   let { goals, date: stringifiedDate } = useLoaderData() as LoaderData;
   let date = new Date(stringifiedDate);
+
+  let { value, onToggle } = useToggle();
   return (
     <main className="relative  flex min-h-screen flex-col">
       <Header />
-      <Strip goals={goals.yearlyGoals} scope="year" date={date} />
-      <Strip goals={goals.monthlyGoals} scope="month" date={date} />
-      <Strip goals={goals.weeklyGoals} scope="week" date={date} />
+      <div className="flex w-full  items-center justify-end px-4 pt-2">
+        <Switch.Group>
+          <div className="flex items-center gap-2">
+            <Switch.Label className="text-sm">Hide completed</Switch.Label>
+
+            <Switch
+              checked={value === "active"}
+              onChange={onToggle}
+              className={`${value === "active" ? "bg-blue-500" : "bg-teal-400"}
+          relative inline-flex h-[16px] w-[24px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2  focus-visible:ring-white focus-visible:ring-opacity-75`}
+            >
+              <span
+                aria-hidden="true"
+                className={`${
+                  value === "active" ? "translate-x-[8px]" : "translate-x-0"
+                }
+            pointer-events-none inline-block h-[12px] w-[12px] transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out`}
+              />
+            </Switch>
+          </div>
+        </Switch.Group>
+      </div>
+      <Strip
+        goals={goals.yearlyGoals}
+        scope="year"
+        date={date}
+        hideCompleted={value === "active"}
+      />
+      <Strip
+        goals={goals.monthlyGoals}
+        scope="month"
+        date={date}
+        hideCompleted={value === "active"}
+      />
+      <Strip
+        goals={goals.weeklyGoals}
+        scope="week"
+        date={date}
+        hideCompleted={value === "active"}
+      />
       <Strip
         goals={goals.dailyGoals}
         scope="day"
         date={date}
-        className="flex-1 "
+        hideCompleted={value === "active"}
       />
     </main>
   );
